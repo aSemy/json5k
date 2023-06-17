@@ -1,5 +1,6 @@
 package io.github.xn32.json5k.internals
 
+import io.github.xn32.json5k.*
 import io.github.xn32.json5k.OutputStrategy
 import io.github.xn32.json5k.format.Token
 import io.github.xn32.json5k.generation.FormatGenerator
@@ -77,33 +78,76 @@ class FormatGeneratorTest {
     }
 
     @Test
+    @IgnoreOnJs
     fun largeFloatingPointNumber() {
-        assertEquals("1.0E7", generate(OutputStrategy.Compressed) {
-            put(Token.FloatingPoint(1e7))
-        })
+        assertDoubleEncoding("900000.0", 9e5)
+        assertDoubleEncoding("9000000.0", 9e6)
+        assertDoubleEncoding("9.0E7", 9e7)
+        assertDoubleEncoding("9.0E8", 9e8)
 
-        assertEquals("-1.0E7", generate(OutputStrategy.Compressed) {
-            put(Token.FloatingPoint(-1e7))
-        })
+        assertDoubleEncoding("-900000.0", -9e5)
+        assertDoubleEncoding("-9000000.0", -9e6)
+        assertDoubleEncoding("-9.0E7", -9e7)
+        assertDoubleEncoding("-9.0E8", -9e8)
 
-        assertEquals("4.511E31", generate(OutputStrategy.Compressed) {
-            put(Token.FloatingPoint(4.511e31))
-        })
+        assertDoubleEncoding("4.511E31", 4.511e31)
     }
 
     @Test
+    @IgnoreOnNonJs
+    fun largeFloatingPointNumber_JS() {
+        assertDoubleEncoding("90000000000000000000.0", 9e19)
+        assertDoubleEncoding("900000000000000000000.0", 9e20)
+        assertDoubleEncoding("9E21", 9e21)
+        assertDoubleEncoding("9E22", 9e22)
+
+        assertDoubleEncoding("-90000000000000000000.0", -9e19)
+        assertDoubleEncoding("-900000000000000000000.0", -9e20)
+        assertDoubleEncoding("-9E21", -9e21)
+        assertDoubleEncoding("-9E22", -9e22)
+
+        assertDoubleEncoding("4.511E31", 4.511e31)
+    }
+
+    @Test
+    @IgnoreOnJs
     fun smallFloatingPointNumber() {
-        assertEquals("9.0E-4", generate(OutputStrategy.Compressed) {
-            put(Token.FloatingPoint(0.9e-3))
-        })
+        assertDoubleEncoding("0.09", 9e-2)
+        assertDoubleEncoding("0.009", 9e-3)
+        assertDoubleEncoding("9.0E-4", 9e-4)
+        assertDoubleEncoding("9.0E-5", 9e-5)
 
-        assertEquals("-9.0E-4", generate(OutputStrategy.Compressed) {
-            put(Token.FloatingPoint(-0.9e-3))
-        })
+        assertDoubleEncoding("-0.09", -9e-2)
+        assertDoubleEncoding("-0.009", -9e-3)
+        assertDoubleEncoding("-9.0E-4", -9e-4)
+        assertDoubleEncoding("-9.0E-5", -9e-5)
 
-        assertEquals("5.612E-20", generate(OutputStrategy.Compressed) {
-            put(Token.FloatingPoint(5.612e-20))
-        })
+        assertDoubleEncoding("5.612E-20", 5.612e-20)
+    }
+
+    @Test
+    @IgnoreOnNonJs
+    fun smallFloatingPointNumber_JS() {
+        assertDoubleEncoding("0.00009", 9e-5)
+        assertDoubleEncoding("0.000009", 9e-6)
+        assertDoubleEncoding("9E-7", 9e-7)
+        assertDoubleEncoding("9E-8", 9e-8)
+
+        assertDoubleEncoding("-0.00009", -9e-5)
+        assertDoubleEncoding("-0.000009", -9e-6)
+        assertDoubleEncoding("-9E-7", -9e-7)
+        assertDoubleEncoding("-9E-8", -9e-8)
+
+        assertDoubleEncoding("5.612E-20", 5.612e-20)
+    }
+
+    private fun assertDoubleEncoding(expected: String, number: Double) {
+        val actual = generate(OutputStrategy.Compressed) { put(Token.FloatingPoint(number)) }
+        assertEquals(
+            expected,
+            actual,
+            "Expect double:$actual is encoded as '$expected', but was '$actual'"
+        )
     }
 
     @Test
