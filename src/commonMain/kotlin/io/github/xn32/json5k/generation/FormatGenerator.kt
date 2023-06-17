@@ -157,13 +157,24 @@ internal class FormatGenerator(private val sink: OutputSink, private val outputS
         when (token) {
             is Token.Bool -> sink.write(token.bool.toString())
             Token.Null -> sink.write("null")
-            is Token.FloatingPoint -> sink.write(token.number.toString())
+            is Token.FloatingPoint -> sink.write(token.format())
             is Token.SignedInteger -> sink.write(token.number.toString())
             is Token.UnsignedInteger -> sink.write(token.number.toString())
             is Token.Str -> writeQuoted(token.string)
         }
     }
 }
+
+/**
+ * Format the floating point number as a string.
+ *
+ * Finite numbers must contain a decimal point, even if the number is an integer.
+ * E.g. `1f` should be formatted as `0.0`.
+ *
+ * For large/small numbers, scientific notation is permitted, but this must use
+ * `E` (without a `+` symbol) for positive values, and `E-` for negative values.
+ */
+internal expect fun Token.FloatingPoint.format(): String
 
 private fun OutputSink.write(sequence: CharSequence) {
     for (char in sequence) {
